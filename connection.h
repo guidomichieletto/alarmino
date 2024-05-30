@@ -3,15 +3,15 @@
 
 #include <Arduino.h>
 #include "WiFiS3.h"
-#include "WiFiSSLClient.h"
 #include "IPAddress.h"
+#include <ArduinoJson.h>
 #include "config.h"
 
 class Connection{
   public:
     void init();
     bool connected();
-    bool serverUpdate(short status);
+    short serverUpdate(short status);
 
   private:
     char ssid[20] = WIFI_SSID;

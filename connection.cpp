@@ -35,8 +35,8 @@ bool Connection::connected(){
   return false;
 }
 
-bool Connection::serverUpdate(short status){
-  if(!connected()) return false;
+short Connection::serverUpdate(short status){
+  if(!connected()) return -2;
 
   bool connection = false;
   for(int i = 0; i < 3 && !connection; i++){
@@ -48,7 +48,7 @@ bool Connection::serverUpdate(short status){
   if (connection) {
     Serial.println("Connesso, invio messaggio");
     
-    client.print("GET /alarm/update-endpoint.php?status=");
+    client.print("GET /alarm/update-endpoint?status=");
     if(status == STATUS_DEACTIVATED || status == STATUS_ACTIVATING) client.print("deactivated");
     if(status == STATUS_ACTIVATED || status == STATUS_DELAY) client.print("activated");
     if(status == STATUS_ALARM) client.print("alarm");
@@ -66,26 +66,42 @@ bool Connection::serverUpdate(short status){
     unsigned long waitStart = millis();
     while (!client.available() && millis() - waitStart < 1000);
     
-    while (client.available()) {
-      /* actual data reception */
-      char c = client.read();
-      /* print data to serial port */
-      Serial.print(c);
-      /* wrap data to 80 columns*/
-      received_data_num++;
-      if(received_data_num % 80 == 0) { 
-        Serial.println();
+    while (client.connected() || client.available()) {
+      if (client.available()) {
+        String line = client.readStringUntil('\n');
+        Serial.println(line);
+
+        // Controlla se abbiamo raggiunto la fine dell'intestazione HTTP
+        if (line == "\r") {
+          Serial.println("Headers received");
+          break;
+        }
       }
     }
 
-    waitStart = millis();
-    while(client.connected() && millis() - waitStart < 1000);
+    // Leggi il corpo della risposta
+    String payload;
+    while (client.available()) {
+      payload += client.readStringUntil('\n');
+    }
+    Serial.println("Received payload: " + payload);
+
+    // Deserializza il JSON ricevuto
+    StaticJsonDocument<1024> doc;
+    DeserializationError error = deserializeJson(doc, payload);
+
+    if (error) {
+      Serial.print("deserializeJson() failed: ");
+      Serial.println(error.f_str());
+      return -2;
+    }
     
     client.stop();
-    Serial.println("Messaggio inviato");
+
+    return doc["status"];
   } else {
     Serial.println("Connessione fallita!");
   }
 
-  return true;
+  return -2;
 }

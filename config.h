@@ -10,12 +10,12 @@
 #define RFID_RESET_DIO 11
 #define LCD_ADDR 0x27
 
-#define WIFI_SSID "MM"
+#define WIFI_SSID ""
 #define WIFI_PASS ""
-#define SERVER ""
+#define SERVER "abc.michieletto.it"
 #define TOKEN ""
 
-#define ALARM_DELAY 60000
+#define ALARM_DELAY 45000
 #define ACTIVATION_DELAY 30000
 
 #define STATUS_DEACTIVATED 0

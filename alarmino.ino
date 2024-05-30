@@ -50,9 +50,15 @@ void loop() {
   buzz();
   
   if(millis() - lastServerUpdate >= 25000 && status != STATUS_ACTIVATING && status != STATUS_DELAY){
-    connection.serverUpdate(status);
+    short newStatus = connection.serverUpdate(status);
     lastServerUpdate = millis();
     prevStatus = status;
+
+    if(newStatus >= 0){
+      Serial.print("Nuovo stato server: ");
+      Serial.println(newStatus);
+      changeStatus(newStatus);
+    }
   }
 
   checkStatus();
